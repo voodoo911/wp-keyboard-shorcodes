@@ -1,3 +1,13 @@
+jQuery(document).ready(function($){
+	$('.show_info_block').click(function(){
+		$('.shortcode_helper .info_data').slideToggle();
+		 
+	})
+})
+function stripSlashes(str)
+	{
+		return str.replace(/\\/g, '');
+	}
 
 function get_conbination_from_obj(e){
 	var special_keys = {

@@ -24,14 +24,17 @@ function wks_return_manu_array( ){
 		$big_url[] = array( 'prefix' => '', 'parent_name' => '', 'name' =>wks_strip_tags_content( $value[0] ), 'url' => $value[2]  );
 		$parent_name = wks_strip_tags_content( $value[0] );
 	
-		if( count($submenu[$file_path]) > 0 )  
-		foreach( $submenu[$file_path] as $single_menu ){
-			//var_dump( $single_menu );
-			if( @substr_count( $single_menu[2], '.php' ) == 0 ){
-				$single_menu[2] = 'admin.php?page='.$single_menu[2];
+		if( isset( $submenu[$file_path] ) ){
+			if( count($submenu[$file_path]) > 0 ) {
+				foreach( $submenu[$file_path] as $single_menu ){
+					//var_dump( $single_menu );
+					if( @substr_count( $single_menu[2], '.php' ) == 0 ){
+						$single_menu[2] = 'admin.php?page='.$single_menu[2];
+					}
+					
+					$big_url[] = array( 'prefix' => '--', 'parent_name' => $parent_name, 'name' =>wks_strip_tags_content(  $single_menu[0] ), 'url' => $single_menu[2]  );
+				}
 			}
-			
-			$big_url[] = array( 'prefix' => '--', 'parent_name' => $parent_name, 'name' =>wks_strip_tags_content(  $single_menu[0] ), 'url' => $single_menu[2]  );
 		}
 	}
 	//var_Dump( $big_url );

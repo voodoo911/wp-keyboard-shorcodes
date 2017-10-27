@@ -45,9 +45,7 @@ jQuery(document).ready(function($){
 		
 	})
 	
-	$('.show_info_block').click(function(){
-		$('.shortcode_helper .info_data').slideToggle();
-	})
+	
 	$('body').on('click', '.delete_row', function(){
 		var pnt = $(this).parents('tr');
 		pnt.fadeOut(function(){

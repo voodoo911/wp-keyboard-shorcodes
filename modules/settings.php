@@ -3,36 +3,33 @@
 add_action('admin_menu', 'wks_item_menu');
 
 function wks_item_menu() {
-	add_menu_page(   __('WKS Editor', 'sc'), __('WKS Editor', 'sc'), 'edit_published_posts', 'wks_editor', 'wks_editor');
+	add_menu_page(   __('Shortcuts', 'sc'), __('Shortcuts', 'sc'), 'edit_published_posts', 'wks_editor', 'wks_editor');
 	add_submenu_page( 'wks_editor',  __('Settings', 'sc'), __('Settings', 'sc'), 'edit_published_posts', 'wks_settings', 'wks_settings');	
 }
 
 // main editor
 function wks_editor(){
 	global $custom_actions;
+	global $current_user;
 ?>
 <div class="wrap tw-bs">
-<h2><?php _e('Correspondence', 'wcc'); ?></h2>
+<h2><?php _e('Shortcuts Setup', 'wcc'); ?></h2>
 <hr/>
- <?php if(  wp_verify_nonce($_POST['_wpnonce']) ): ?>
-  <div id="message" class="updated" ><?php _e('Saved successfully', 'wcc'); ?></div>  
-  <?php 
-  $config = get_option('wks_editor'); 
- 
-	foreach( $_POST as $key=>$value ){
-		$options[$key] = $value;
-	}
-  update_option('wks_editor', $options );
-  
-
-  else:  ?>
-
-  <?php //exit; ?>
-  
-  <?php endif; ?> 
+	<?php if( isset($_GET['status']) ){
+		if( $_GET['status'] == 'save' ){
+		?>
+		<div id="message" class="updated" >
+			<p><?php _e('Combinations saved successfully', 'sc'); ?></p>
+		</div>    
+		<?php
+		}
+	} ?>
 <form class="form-horizontal" method="post" action="" id="submit_shortcodes" enctype="multipart/form-data" >
-<?php wp_nonce_field();  
-$config = get_option('wks_editor'); 
+<?php 
+wp_nonce_field( 'wks_editor_action', 'wks_editor_field'  );  
+
+$config = get_user_meta( $current_user->ID, 'wks_editor', true); 
+ 
 
 $menu_array = wks_return_manu_array();
  //var_dump( $menu_array );
@@ -46,6 +43,8 @@ $menu_array = wks_return_manu_array();
 				<th> </th>  
 				<th> </th>  
 				<th> </th>  
+				<th> </th>  
+				<th> </th>  
 				<th><input type="button" class="btn btn-success add_row" value="Add Row" /></th>  
 			</tr>
 		
@@ -54,7 +53,8 @@ $menu_array = wks_return_manu_array();
             <th>&nbsp;</th> 
 			<th>Action Type</th>  
             <th>Details</th>  
-            <!-- <th>Admin Bar</th>  -->
+            <th>Name</th>
+            <th>Admin Bar</th>
             <th>Actions</th>  
           </tr>  
 		  
@@ -71,10 +71,10 @@ $menu_array = wks_return_manu_array();
 				?>
 				
 				 <tr>  
-					<td><input name="combination[]" id="keyPrssInp" class="shortcut_input_field" type="text" value="<?php echo $config['combination'][$i];  ?>" /></td>  
+					<td><input name="combination[]" id="keyPrssInp" class="shortcut_input_field input-medium" type="text" value="<?php echo $config['combination'][$i];  ?>" /></td>  
 					<td><input class="enter_combination btn btn-warning" type="button"  value="Enter Combination" /></td>  
 					<td>
-						<select name="action[]" class="action_picker">
+						<select name="action[]" class="action_picker input-medium">
 							<option  <?php if( $config['action'][$i] == 'menu_action' ){ echo ' selected ';} ?> value="menu_action">Menu Action
 							<option <?php if( $config['action'][$i] == 'custom_action' ){ echo ' selected ';} ?> value="custom_action">Custom Action
 							<option <?php if( $config['action'][$i] == 'click_emulation' ){ echo ' selected ';} ?> value="click_emulation">Click Emulation
@@ -91,7 +91,7 @@ $menu_array = wks_return_manu_array();
 							$out_style = ' style="display:none;" '; 
 						} 
 						?>
-						<select name="menu_element[]" class="menu_action second_stage_picker" <?php echo $out_style; ?> >
+						<select name="menu_element[]" class="menu_action second_stage_picker  input-medium" <?php echo $out_style; ?> >
 							<option value="">Select Menu
 						<?php 
 							foreach( $menu_array as $single_menu ){
@@ -110,7 +110,7 @@ $menu_array = wks_return_manu_array();
 							$out_style = ' style="display:none;" '; 
 						} 
 						?>
-						<select name="custom_action[]" class="custom_action second_stage_picker" <?php echo $out_style; ?> >
+						<select name="custom_action[]" class=" input-medium custom_action second_stage_picker" <?php echo $out_style; ?> >
 							<option value="">Select Action
 							
 							<?php 
@@ -128,13 +128,25 @@ $menu_array = wks_return_manu_array();
 							$out_style = ' style="display:none;" '; 
 						} 
 						?>
-						<input name="click_emulation_selector[]"  class="click_emulation second_stage_picker" <?php echo $out_style; ?> value="<?php echo $config['click_emulation_selector'][$i]; ?>" />
+						<input name="click_emulation_selector[]"  class="click_emulation second_stage_picker input-medium" <?php echo $out_style; ?> value="<?php echo htmlentities( stripslashes($config['click_emulation_selector'][$i] ) ); ?>" />
 					</td>  
-					<!--
+			
 					<td>
-						<input type="checkbox" class="admin_bar_checkbox" name="admin_bar" value="on" <?php if( $config['admin_bar'][$i] == "on" ){ echo ' checked '; } ?>  />
+						<input name="small_descr[]"   class=" input-medium" type="text" value="<?php echo htmlentities( stripslashes( $config['small_descr'][$i] ) );  ?>" />
+					</td> 
+			
+					<td>
+						<input type="checkbox" class="admin_bar_checkbox" name="admin_bar" value="on" 
+						<?php 
+						if( isset($config['admin_bar'][$i]) ){
+							if( $config['admin_bar'][$i] == "on" ){ 
+								echo ' checked '; 
+							}
+						}
+						?>  
+						/>
 					</td>
-					-->
+			
 					<td>
 						<button type="button" class="btn btn-success clone_row" ><span class="dashicons dashicons-screenoptions" title="<?php _e('Clone Element', 'wks') ?>"></span></button>
 						<button type="button" class="btn btn-danger delete_row" ><span class="dashicons dashicons-trash" title="<?php _e('Delete Element', 'wks') ?>"></span></button>
@@ -148,18 +160,15 @@ $menu_array = wks_return_manu_array();
 		
 		<?php else: ?>
 			 <tr>  
-					<td><input name="combination[]" id="keyPrssInp" class="shortcut_input_field" type="text" value="<?php echo $config['combination'][$i];  ?>" /></td>  
+					<td><input name="combination[]" id="keyPrssInp" class="shortcut_input_field input-medium" type="text" value="<?php echo $config['combination'][$i];  ?>" /></td>  
 					<td><input class="enter_combination btn btn-warning" type="button"  value="Enter Combination" /></td>  
 					<td>
-						<select name="action[]" class="action_picker">
+						<select name="action[]" class="action_picker input-medium">
 							<option  <?php if( $config['action'][$i] == 'menu_action' ){ echo ' selected ';} ?> value="menu_action">Menu Action
 							<option <?php if( $config['action'][$i] == 'custom_action' ){ echo ' selected ';} ?> value="custom_action">Custom Action
 							<option <?php if( $config['action'][$i] == 'click_emulation' ){ echo ' selected ';} ?> value="click_emulation">Click Emulation
 						</select>
-						
-						
-						
-						
+	
 					</td>  
 					<td class="pickers_block">
 		
@@ -173,7 +182,7 @@ $menu_array = wks_return_manu_array();
 						?>
 						</select>
 
-						<select name="custom_action[]" class="custom_action second_stage_picker" >
+						<select name="custom_action[]" class="custom_action second_stage_picker  input-medium" >
 							<option value="">Select Action
 							
 							<?php 
@@ -184,11 +193,15 @@ $menu_array = wks_return_manu_array();
 
 						</select>
 
-						<input name="click_emulation_selector[]"  class="click_emulation second_stage_picker"  value="<?php echo $config['click_emulation_selector'][$i]; ?>" />
+						<input name="click_emulation_selector[]"  class="click_emulation second_stage_picker  input-medium"  value="<?php echo $config['click_emulation_selector'][$i]; ?>" />
 					</td>  
 					
 					<td>
-						<input type="checkbox admin_bar_checkbox" name="admin_bar" value="on"   />
+						<input name="small_descr[]"   class=" input-medium" type="text" value="" />
+					</td>
+					
+					<td>
+						<input type="checkbox" class="admin_bar_checkbox" name="admin_bar" value="on"   />
 					</td>
 					
 					<td>
@@ -226,32 +239,41 @@ $menu_array = wks_return_manu_array();
 
 // settings page
 function wks_settings(){
+	global $current_user;
+	
 	$config_big = array(
 		array(
 			'name' => 'show_helper',
 			'type' => 'checkbox',
-			'title' => 'Show Helper',
-			'text' => 'Turn on if you would like to show helper icon top right, that will show you all your combinations',
+			'title' => 'Show Helper Block',
+			'text' => 'Turn on if you would like to show helper icon top right, that will list you all your combinations',
 			'sub_text' => '',
 			'style' => ''
 		),
 		array(
 			'name' => 'show_menu_help',
 			'type' => 'checkbox',
-			'title' => 'Show Menu Help',
-			'text' => 'Turn on if you would like to show helper text on menus',
+			'title' => 'Show Combiantions In Menu',
+			'text' => 'Turn on if you would like to show combinations text in admin menu',
 			'sub_text' => '',
 			'style' => ''
 		),
 		array(
 			'name' => 'trace_input',
 			'type' => 'checkbox',
-			'title' => 'Trace Clicks on input',
-			'text' => 'Turn on if you would like to trace clinks on user input in input field, or textarea.',
+			'title' => 'Trace shortcuts on input fields',
+			'text' => 'Turn on if you would like to trace shortcuts while input in input field, or textarea.',
 			'sub_text' => '',
 			'style' => ''
 		),
-	
+		array(
+			'name' => 'show_in_admin_bar',
+			'type' => 'checkbox',
+			'title' => 'Show Shortcuts in Admin Bar',
+			'text' => 'Turn on if you would like to show menu with shortcuts in your Wordpress admin bar.',
+			'sub_text' => '',
+			'style' => ''
+		),
 	
 		
 	);
@@ -260,26 +282,24 @@ function wks_settings(){
 <div class="wrap tw-bs">
 <h2><?php _e('Settings', 'sc'); ?></h2>
 <hr/>
- <?php if(  wp_verify_nonce($_POST['_wpnonce']) ): ?>
-  <div id="message" class="updated" ><?php _e('Settings saved successfully', 'sc'); ?></div>  
-  <?php 
-  $config = get_option('wks_settings'); 
-
-	foreach( $_POST as $key=>$value ){
-		$wks_settings[$key] = $value;
-	}
-  update_option('wks_settings', $wks_settings );
-  ?>
-  <?php else:  ?>
-
-  <?php //exit; ?>
-  
-  <?php endif; ?> 
+	<?php if( isset($_GET['status']) ){
+		if( $_GET['status'] == 'save' ){
+		?>
+		<div id="message" class="updated" >
+			<p><?php _e('Settings saved successfully', 'sc'); ?></p>
+		</div>    
+		<?php
+		}
+	} ?>
+		
+	
 <form class="form-horizontal" method="post" action="">
-<?php wp_nonce_field();  
-$config = get_option('wks_settings'); 
+<?php 
 
-//var_dump( $config );
+wp_nonce_field( 'wks_settings_action', 'wks_settings_field'  ); 
+  
+$config = get_user_meta( $current_user->ID, 'wks_settings', true); 
+ 
 ?>  
 <fieldset>
 
